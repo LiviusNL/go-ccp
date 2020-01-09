@@ -34,7 +34,7 @@ func main() {
 			log.Fatalf("invalid object request: %v", flag.Arg(0))
 		}
 
-		resp, err := client.Request(&ccp.PasswordRequest{
+		resp, logicalError, err := client.Request(&ccp.PasswordRequest{
 			Safe:   request[1],
 			Folder: request[2],
 			Object: request[3],
@@ -42,6 +42,9 @@ func main() {
 		})
 		if err != nil {
 			log.Fatalf("password request failed: %v", err)
+		}
+		if logicalError != "" {
+			log.Fatalf("password request failed: %v", logicalError)
 		}
 		fmt.Printf("Response:\n%v\n", resp)
 	case "query":
@@ -86,9 +89,12 @@ func main() {
 			}
 		}
 
-		resp, err := client.Query(req, qf)
+		resp, logicalError, err := client.Query(req, qf)
 		if err != nil {
 			log.Fatalf("password query failed %v", err)
+		}
+		if logicalError != "" {
+			log.Fatalf("password query failed: %v", logicalError)
 		}
 		fmt.Printf("Response:\n%v\n", resp)
 	default:
@@ -106,7 +112,7 @@ func parseCmdLine() *ccp.Config {
 		fmt.Fprintln(flag.CommandLine.Output(), " ccpcli query/queryparam[/queryparam[...]] [reason] [exact|regex]")
 	}
 	c := &ccp.Config{}
-	flag.StringVar(&c.Hostname, "host", "", "The `hostname` of the CCP Web Server")
+	flag.StringVar(&c.Host, "host", "", "The `hostname:[port]` of the CCP Web Server")
 	flag.StringVar(&c.ApplicationID, "app-id", "", "The `application_identifier` of the application performing the request")
 	flag.IntVar(&c.ConnectionTimeout, "timeout", 30, "The CCP server `timeout` in seconds")
 	flag.BoolVar(&c.FailRequestOnPasswordChange, "fail", false, "Fail Request, when a password change is in progress")
@@ -118,7 +124,7 @@ func parseCmdLine() *ccp.Config {
 	flag.StringVar(&caFile, "ca", "", "A file containing a PEM `certificate or bundle` to verify the server certificate")
 	flag.Parse()
 
-	if len(c.Hostname) == 0 {
+	if len(c.Host) == 0 {
 		log.Fatalf("missing required --host parameter")
 	}
 	if len(c.ApplicationID) == 0 {
@@ -130,7 +136,7 @@ func parseCmdLine() *ccp.Config {
 		if err != nil {
 			log.Fatalf("%v", err)
 		}
-		c.Certificate = &cert
+		c.ClientCertificate = &cert
 	case len(certFile) != 0 || len(keyFile) != 0:
 		log.Fatalf("parameters --cert and --key must be used together")
 	}

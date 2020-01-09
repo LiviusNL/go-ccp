@@ -1,4 +1,4 @@
-package internal
+package ccptest
 
 import (
 	"crypto/rand"
@@ -53,8 +53,8 @@ func NewCA() (*CA, error) {
 	return &CA{Certificate: cert, privateKey: pk}, nil
 }
 
-// NewClientCert creates a new test client certificate
-func (ca *CA) NewClientCert(cn string) ([]byte, []byte, error) {
+// NewClientCertificate creates a new test client certificate
+func (ca *CA) NewClientCertificate(cn string) ([]byte, []byte, error) {
 	pk, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		return nil, nil, err

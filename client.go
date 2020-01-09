@@ -16,10 +16,10 @@ import (
 type Config struct {
 	modifyLock sync.RWMutex
 
-	// The hostname of CCP Web Service host.
-	// This should be a hostname with an optipnal port number.
+	// The host of CCP Web Service host.
+	// This should be a hostname with an optional port number.
 	// Using the format: hostname[:port]
-	Hostname string
+	Host string
 
 	// HttpClient is the HTTP client to use to access the CCP Web Service
 	HTTPClient *http.Client
@@ -40,7 +40,7 @@ type Config struct {
 	FailRequestOnPasswordChange bool
 
 	// Certificate is used to to authenticate against the CCP Web Service
-	Certificate *tls.Certificate
+	ClientCertificate *tls.Certificate
 
 	// SkipTLSVerify disbles or enables service certificate Validation
 	SkipTLSVerify bool
@@ -80,8 +80,8 @@ func NewClient(c *Config) (*Client, error) {
 	c.modifyLock.Lock()
 	defer c.modifyLock.Unlock()
 
-	if len(c.Hostname) == 0 {
-		return nil, errors.New("Hostname is empty")
+	if len(c.Host) == 0 {
+		return nil, errors.New("Host is empty")
 	}
 	if c.HTTPClient == nil {
 		c.HTTPClient = CredentialProviderHTTPClient()
@@ -94,8 +94,8 @@ func NewClient(c *Config) (*Client, error) {
 	}
 
 	tlsClientConfig := &tls.Config{}
-	if c.Certificate != nil {
-		tlsClientConfig.Certificates = append(tlsClientConfig.Certificates, *c.Certificate)
+	if c.ClientCertificate != nil {
+		tlsClientConfig.Certificates = append(tlsClientConfig.Certificates, *c.ClientCertificate)
 	}
 	if c.SkipTLSVerify {
 		tlsClientConfig.InsecureSkipVerify = true
@@ -109,7 +109,7 @@ func NewClient(c *Config) (*Client, error) {
 		config: c,
 		url: url.URL{
 			Scheme: "https",
-			Host:   c.Hostname,
+			Host:   c.Host,
 			Path:   "/AIMWebService/api/Accounts",
 		},
 	}
@@ -123,27 +123,27 @@ func (c *Client) Close() {
 	c.config.HTTPClient.CloseIdleConnections()
 }
 
-// Hostname returns the CCP Web Service hostname
-func (c *Client) Hostname() string {
+// Host returns the CCP Web Service host
+func (c *Client) Host() string {
 	c.modifyLock.RLock()
 	c.config.modifyLock.RLock()
 	defer c.config.modifyLock.RUnlock()
 	c.modifyLock.RUnlock()
 
-	return c.config.Hostname
+	return c.config.Host
 }
 
-// SetHostname sets the CCP Web Service hostname
-func (c *Client) SetHostname(v string) error {
+// SetHost sets the CCP Web Service host
+func (c *Client) SetHost(v string) error {
 	c.modifyLock.RLock()
 	c.config.modifyLock.Lock()
 	defer c.config.modifyLock.Unlock()
 	c.modifyLock.RUnlock()
 
 	if len(v) == 0 {
-		return errors.New("Hostname is empty")
+		return errors.New("Host is empty")
 	}
-	c.config.Hostname = v
+	c.config.Host = v
 
 	c.modifyLock.Lock()
 	defer c.modifyLock.Unlock()
@@ -199,6 +199,7 @@ func (c *Client) SetFailRequestOnPasswordChange(v bool) {
 	c.updateQueryValues()
 }
 
+// updateQueryValues updates the query parameters after a configuration change
 func (c *Client) updateQueryValues() {
 	v := url.Values{}
 

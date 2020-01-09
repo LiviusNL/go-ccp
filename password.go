@@ -2,6 +2,7 @@ package ccp
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/url"
 	"strings"
@@ -30,6 +31,7 @@ type PasswordRequest struct {
 	Safe, Folder, Object        string
 	UserName, Address, Database string
 	PolicyID                    string
+
 	// Password request reason
 	Reason string
 }
@@ -37,16 +39,25 @@ type PasswordRequest struct {
 // PasswordResponse contains the retrieved password information
 type PasswordResponse struct {
 	// Password
-	Content string
-	// Username to be used with the password
-	UserName                string
-	Address                 string
-	Database                string
+	Content        string
+	CreationMethod string
+
+	Safe, Folder          string
+	UserName, LogonDomain string
+	Name                  string
+	Address, DeviceType   string
+	Database              string // Is this a valid response?
+	PolicyID              string
+
 	PasswordChangeInProcess bool
+
+	// Error Information
+	ErrorCode string
+	ErrorMsg  string
 }
 
 // Request requests a password from the CCP Web Service
-func (c *Client) Request(r *PasswordRequest) (*PasswordResponse, error) {
+func (c *Client) Request(r *PasswordRequest) (*PasswordResponse, string, error) {
 	v := &url.Values{}
 
 	if len(r.Safe) != 0 {
@@ -81,7 +92,7 @@ func (c *Client) Request(r *PasswordRequest) (*PasswordResponse, error) {
 }
 
 // Query queries the CCP Web Service for a password
-func (c *Client) Query(r *PasswordRequest, qf QueryFormat) (*PasswordResponse, error) {
+func (c *Client) Query(r *PasswordRequest, qf QueryFormat) (*PasswordResponse, string, error) {
 	qv := make(map[string]string, 8)
 
 	if len(r.Safe) != 0 {
@@ -132,27 +143,42 @@ func (c *Client) Query(r *PasswordRequest, qf QueryFormat) (*PasswordResponse, e
 	return c.ccpRequest(v)
 }
 
-func (c *Client) ccpRequest(v *url.Values) (*PasswordResponse, error) {
-	req, err := http.NewRequest("GET", c.url.String()+"&"+v.Encode(), nil)
+func (c *Client) ccpRequest(v *url.Values) (*PasswordResponse, string, error) {
+	req, err := http.NewRequest(http.MethodGet, c.url.String()+"&"+v.Encode(), nil)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	req.Header.Add("Content-Type", "application/json")
 
 	resp, err := c.config.HTTPClient.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	defer resp.Body.Close()
 
-	var pwResp *PasswordResponse
-	dec := json.NewDecoder(resp.Body)
-	dec.UseNumber()
-	// dec.DisallowUnknownFields()
-	err = dec.Decode(pwResp)
-	if err != nil {
-		return nil, err
+	var logicalError string
+	switch resp.StatusCode {
+	case http.StatusOK:
+		break
+	case http.StatusBadRequest: //400
+		fallthrough
+	case http.StatusUnauthorized: //401
+		fallthrough
+	case http.StatusForbidden: // 403
+		fallthrough
+	case http.StatusNotFound: // 404
+		logicalError = resp.Status
+	default:
+		return nil, "", errors.New("unexpected http status: " + resp.Status)
 	}
 
-	return pwResp, nil
+	r := &PasswordResponse{}
+	dec := json.NewDecoder(resp.Body)
+	dec.UseNumber()
+	err = dec.Decode(r)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return r, logicalError, nil
 }
