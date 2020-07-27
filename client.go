@@ -45,6 +45,9 @@ type Config struct {
 	// SkipTLSVerify disbles or enables service certificate Validation
 	SkipTLSVerify bool
 
+	// Enable TLS Renegotiation
+	EnableTLSRenegotiation bool
+
 	// RootCA is a PEM encoded certificate or bundle to verify the
 	// CCP Web Service Server Certificat
 	RootCAs *x509.CertPool
@@ -99,6 +102,9 @@ func NewClient(c *Config) (*Client, error) {
 	}
 	if c.SkipTLSVerify {
 		tlsClientConfig.InsecureSkipVerify = true
+	}
+	if c.EnableTLSRenegotiation {
+		tlsClientConfig.Renegotiation = tls.RenegotiateOnceAsClient
 	}
 	if c.RootCAs != nil {
 		tlsClientConfig.RootCAs = c.RootCAs

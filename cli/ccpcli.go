@@ -117,6 +117,7 @@ func parseCmdLine() *ccp.Config {
 	flag.IntVar(&c.ConnectionTimeout, "timeout", 30, "The CCP server `timeout` in seconds")
 	flag.BoolVar(&c.FailRequestOnPasswordChange, "fail", false, "Fail Request, when a password change is in progress")
 	flag.BoolVar(&c.SkipTLSVerify, "skip-tls", false, "Skip the verification of the server certificate")
+	flag.BoolVar(&c.EnableTLSRenegotiation, "tls-renegotiation", false, "Enable TLS renegotiation support")
 
 	var certFile, keyFile, caFile string
 	flag.StringVar(&certFile, "cert", "", "A file containing the client `certificate` for web service authentication")
