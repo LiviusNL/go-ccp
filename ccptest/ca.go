@@ -78,7 +78,6 @@ func (ca *CA) NewClientCertificate(cn string) ([]byte, []byte, error) {
 		BasicConstraintsValid: true,
 	}
 
-	//	certBytes, err := x509.CreateCertificate(rand.Reader, caTemplate, caTemplate, &pk.PublicKey, pk)
 	certBytes, err := x509.CreateCertificate(rand.Reader, certTemplate, ca.Certificate, &pk.PublicKey, ca.privateKey)
 	if err != nil {
 		return nil, nil, err
