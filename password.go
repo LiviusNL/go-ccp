@@ -49,7 +49,7 @@ type PasswordResponse struct {
 	Database              string // Is this a valid response?
 	PolicyID              string
 
-	PasswordChangeInProcess bool
+	PasswordChangeInProcess bool `json:",string"`
 
 	// Error Information
 	ErrorCode string
