@@ -6,6 +6,9 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
+
+	"github.com/mitchellh/mapstructure"
 )
 
 const defaultFolder = "Root"
@@ -38,22 +41,56 @@ type PasswordRequest struct {
 
 // PasswordResponse contains the retrieved password information
 type PasswordResponse struct {
+	SequenceID int `mapstructure2:"sequence_id,omitempty"`
 	// Password
-	Content        string
-	CreationMethod string
+	Content string `mapstructure2:"content"`
 
-	Safe, Folder          string
-	UserName, LogonDomain string
-	Name                  string
-	Address, DeviceType   string
-	Database              string // Is this a valid response?
-	PolicyID              string
+	Safe               string `mapstructure2:"safe"`
+	Folder             string `mapstructure2:"folder"`
+	UserName           string `mapstructure2:"username"`
+	LogonDomain        string `mapstructure2:"logon_domain"`
+	Name               string `mapstructure2:"name,omitempty"`
+	AccountDescription string `mapstructure2:"account_description,omitempty"`
+	Address            string `mapstructure2:"address,omitempty"`
+	DeviceType         string `mapstructure2:"device_type,omitempty"`
+	Environment        string `mapstructure2:"content,omitempty"`
+	Database           string `mapstructure2:"database,omitempty"` // Is Database a valid response?
+	CreationMethod     string `mapstructure2:"creation_method,omitempty"`
 
-	PasswordChangeInProcess bool `json:",string"`
+	PolicyID    string `mapstructure2:"policy_id,omitempty"`
+	CPMStatus   string `mapstructure2:"cpm_status,omitempty"`
+	CPMDisabled string `mapstructure2:"cpm_disabled,omitempty"`
+
+	PasswordChangeInProcess bool `mapstructure2:"password_change_in_process"`
+
+	LastTask                  string `mapstructure2:"last_task"`
+	LastSuccessReconciliation int64  `mapstructure2:"last_success_reconciliation"` // Unix time, the number of seconds elapsed since January 1, 1970 UTC
+
+	RetriesCount int `mapstructure2:"retries_count,omitempty"`
 
 	// Error Information
-	ErrorCode string
-	ErrorMsg  string
+	ErrorCode string `mapstructure2:"error_code,omitempty"`
+	ErrorMsg  string `mapstructure2:"error_msg,omitempty"`
+}
+
+// MapSnakeCase returns PasswordResponse a map[string]interface{}, using snake case keys
+func (pr *PasswordResponse) MapSnakeCase() (map[string]interface{}, error) {
+	var r map[string]interface{}
+	dec, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+		TagName: "mapstructure2",
+		Result:  &r,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	err = dec.Decode(pr)
+	if err != nil {
+		return nil, err
+	}
+	r["last_success_reconciliation"] = time.Unix(pr.LastSuccessReconciliation, 0)
+
+	return r, nil
 }
 
 // Request requests a password from the CCP Web Service
@@ -172,10 +209,20 @@ func (c *Client) ccpRequest(v *url.Values) (*PasswordResponse, string, error) {
 		return nil, "", errors.New("unexpected http status: " + resp.Status)
 	}
 
+	var raw map[string]interface{}
+
+	// The CCP does not return proper JSON
+	// Unmarshall JSON first in map of generic types
+	jdec := json.NewDecoder(resp.Body)
+	jdec.UseNumber()
+	err = jdec.Decode(&raw)
+	if err != nil {
+		return nil, "", err
+	}
+
+	// Decode Map into final structure
 	r := &PasswordResponse{}
-	dec := json.NewDecoder(resp.Body)
-	dec.UseNumber()
-	err = dec.Decode(r)
+	err = mapstructure.WeakDecode(raw, r)
 	if err != nil {
 		return nil, "", err
 	}

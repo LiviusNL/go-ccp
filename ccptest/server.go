@@ -10,6 +10,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"strconv"
+	"time"
 )
 
 // Server is a mock CCP WebService implementation for testing purposes
@@ -25,23 +26,38 @@ type Server struct {
 }
 
 // testPasswordResponse contains the retrieved password information
+// The Central Credential Provider returns all data as a string
 type testPasswordResponse struct {
+	SequenceID string `json:",omitempty"`
 	// Password
-	Content        string
-	CreationMethod string
+	Content string `json:",omitempty"`
 
-	Safe, Folder          string
-	UserName, LogonDomain string
-	Name                  string
-	Address, DeviceType   string
-	Database              string // Is this a valid response parameter?
-	PolicyID              string
+	Safe               string `json:",omitempty"`
+	Folder             string `json:",omitempty"`
+	UserName           string `json:",omitempty"`
+	LogonDomain        string `json:",omitempty"`
+	Name               string `json:",omitempty"`
+	AccountDescription string `json:",omitempty"`
+	Address            string `json:",omitempty"`
+	DeviceType         string `json:",omitempty"`
+	Environment        string `json:",omitempty"`
+	Database           string `json:",omitempty"` // Is Database a valid response?
+	CreationMethod     string `json:",omitempty"`
 
-	PasswordChangeInProcess bool
+	PolicyID    string `json:",omitempty"`
+	CPMStatus   string `json:",omitempty"`
+	CPMDisabled string `json:",omitempty"`
+
+	PasswordChangeInProcess string `json:",omitempty"`
+
+	LastTask                  string `json:",omitempty"`
+	LastSuccessReconciliation string `json:",omitempty"` // Unix time, the number of seconds elapsed since January 1, 1970 UTC
+
+	RetriesCount string `json:",omitempty"`
 
 	// Error Information
-	ErrorCode string
-	ErrorMsg  string
+	ErrorCode string `json:",omitempty"`
+	ErrorMsg  string `json:",omitempty"`
 }
 
 // NewCCPServer start a mock CCP Web Service
@@ -123,7 +139,12 @@ func ccpHandler(w http.ResponseWriter, r *http.Request) {
 		status = http.StatusForbidden
 	}
 
-	resp := testPasswordResponse{}
+	resp := testPasswordResponse{
+		SequenceID:                "1",
+		PasswordChangeInProcess:   "False",
+		LastSuccessReconciliation: strconv.FormatInt(time.Now().Unix(), 10),
+		RetriesCount:              "-1",
+	}
 
 	// Object, OtherObject results in error
 	object := r.Form.Get("Object")

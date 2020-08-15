@@ -139,3 +139,52 @@ func TestQuery(t *testing.T) {
 		}
 	}
 }
+
+// TestRequest test password requests
+func TestMapSnakeCase(t *testing.T) {
+	applicationID := "MyApp"
+	var tests = []struct {
+		Safe   string
+		Folder string
+		Object string
+		valid2 bool // CCP Request technical succeeded
+		valid3 bool // CCP Request logical succeeded
+	}{
+		{"MySafe", "", "MyObject", true, true},
+	}
+	ts := ccptest.NewCCPServer()
+	defer ts.Close()
+
+	conf := &Config{
+		Host:          ts.Host,
+		ApplicationID: applicationID,
+		RootCAs:       x509.NewCertPool(),
+	}
+	conf.RootCAs.AppendCertsFromPEM(ts.ServerRootCA())
+	cert, _ := tls.X509KeyPair(ts.ClientCertificate(applicationID))
+	conf.ClientCertificate = &cert
+
+	tc, err := NewClient(conf)
+	if err != nil {
+		t.Errorf("fail: %v", err)
+	}
+
+	for _, test := range tests {
+		r, logicalError, err := tc.Request(&PasswordRequest{
+			Safe:   test.Safe,
+			Folder: test.Folder,
+			Object: test.Object,
+		})
+		if (err == nil) != test.valid2 {
+			t.Errorf("fail %v: %v", test, err)
+		}
+		if (logicalError == "") != test.valid3 {
+			t.Errorf("fail %v: %v", test, logicalError)
+		}
+
+		_, err = r.MapSnakeCase()
+		if err != nil {
+			t.Errorf("fail: %v", err)
+		}
+	}
+}
