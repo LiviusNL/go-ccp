@@ -63,8 +63,8 @@ type PasswordResponse struct {
 
 	PasswordChangeInProcess bool `mapstructure2:"password_change_in_process"`
 
-	LastTask                  string `mapstructure2:"last_task"`
-	LastSuccessReconciliation int64  `mapstructure2:"last_success_reconciliation"` // Unix time, the number of seconds elapsed since January 1, 1970 UTC
+	LastTask                  string `mapstructure2:"last_task,omitempty"`
+	LastSuccessReconciliation int64  `mapstructure2:"last_success_reconciliation,omitempty"` // Unix time, the number of seconds elapsed since January 1, 1970 UTC
 
 	RetriesCount int `mapstructure2:"retries_count,omitempty"`
 

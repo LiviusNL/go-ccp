@@ -35,70 +35,70 @@ type Client struct {
 }
 ```
 
-### func NewClient
+#### func NewClient
 
 ```go
 func NewClient(c *Config) (*Client, error)
 ```
 NewClient creates a CCP client given the provided Config
 
-### func (*Client) Close
+#### func (*Client) Close
 
 ```go
 func (c *Client) Close()
 ```
 Close HTTP idle connections
 
-### func (*Client) ConnectionTimeout
+#### func (*Client) ConnectionTimeout
 
 ```go
 func (c *Client) ConnectionTimeout() int
 ```
 ConnectionTimeout returns the connection timeout to EPV from the CCP Server
 
-### func (*Client) FailRequestOnPasswordChange
+#### func (*Client) FailRequestOnPasswordChange
 
 ```go
 func (c *Client) FailRequestOnPasswordChange() bool
 ```
 FailRequestOnPasswordChange returns the request behaviour, when a password change is in progress
 
-### func (*Client) Host
+#### func (*Client) Host
 
 ```go
 func (c *Client) Host() string
 ```
 Host returns the CCP Web Service host
 
-### func (*Client) Query
+#### func (*Client) Query
 
 ```go
 func (c *Client) Query(r *PasswordRequest, qf QueryFormat) (*PasswordResponse, string, error)
 ```
 Query queries the CCP Web Service for a password
 
-### func (*Client) Request
+#### func (*Client) Request
 
 ```go
 func (c *Client) Request(r *PasswordRequest) (*PasswordResponse, string, error)
 ```
 Request requests a password from the CCP Web Service
 
-### func (*Client) SetConnectionTimeout
+#### func (*Client) SetConnectionTimeout
 
 ```go
 func (c *Client) SetConnectionTimeout(v int) error
 ```
 SetConnectionTimeout sets the connection timeout to EPV from the CCP Server
 
-### func (*Client) SetFailRequestOnPasswordChange
+#### func (*Client) SetFailRequestOnPasswordChange
 
 ```go
 func (c *Client) SetFailRequestOnPasswordChange(v bool)
 ```
 SetFailRequestOnPasswordChange sets the request behaviour, when a password change is in progress
 
-### func (*Client) SetHost
+#### func (*Client) SetHost
 
 ```go
 func (c *Client) SetHost(v string) error
@@ -172,24 +172,47 @@ PasswordResponse contains the retrieved password information
 
 ```go
 type PasswordResponse struct {
-    // Password
-    Content        string
-    CreationMethod string
+	SequenceID int `mapstructure2:"sequence_id,omitempty"`
+	// Password
+	Content string `mapstructure2:"content"`
 
-    Safe, Folder          string
-    UserName, LogonDomain string
-    Name                  string
-    Address, DeviceType   string
-    Database              string // Is this a valid response?
-    PolicyID              string
+	Safe               string `mapstructure2:"safe"`
+	Folder             string `mapstructure2:"folder"`
+	UserName           string `mapstructure2:"username"`
+	LogonDomain        string `mapstructure2:"logon_domain"`
+	Name               string `mapstructure2:"name,omitempty"`
+	AccountDescription string `mapstructure2:"account_description,omitempty"`
+	Address            string `mapstructure2:"address,omitempty"`
+	DeviceType         string `mapstructure2:"device_type,omitempty"`
+	Environment        string `mapstructure2:"content,omitempty"`
+	Database           string `mapstructure2:"database,omitempty"` // Is Database a valid response?
+	CreationMethod     string `mapstructure2:"creation_method,omitempty"`
 
-    PasswordChangeInProcess bool
+	PolicyID    string `mapstructure2:"policy_id,omitempty"`
+	CPMStatus   string `mapstructure2:"cpm_status,omitempty"`
+	CPMDisabled string `mapstructure2:"cpm_disabled,omitempty"`
 
-    // Error Information
-    ErrorCode string
-    ErrorMsg  string
+	PasswordChangeInProcess bool `mapstructure2:"password_change_in_process"`
+
+	LastTask                  string `mapstructure2:"last_task,omitempty"`
+	LastSuccessReconciliation int64  `mapstructure2:"last_success_reconciliation,omitempty"` // Unix time, the number of seconds elapsed since January 1, 1970 UTC
+
+	RetriesCount int `mapstructure2:"retries_count,omitempty"`
+
+	// Error Information
+	ErrorCode string `mapstructure2:"error_code,omitempty"`
+	ErrorMsg  string `mapstructure2:"error_msg,omitempty"`
 }
 ```
+
+#### func MapSnakeCase
+
+```go
+func (pr *PasswordResponse) MapSnakeCase() (map[string]interface{}, error)
+```
+
+MapSnakeCase returns PasswordResponse a map[string]interface{}, using snake case keys
+
 ### type QueryFormat
 
 QueryFormat specifies the type query being executed
