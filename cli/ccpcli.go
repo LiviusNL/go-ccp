@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"flag"
@@ -15,6 +16,7 @@ import (
 )
 
 func main() {
+	ctx := context.Background()
 	client, err := ccp.NewClient(parseCmdLine())
 	if err != nil {
 		panic(err)
@@ -34,7 +36,7 @@ func main() {
 			log.Fatalf("invalid object request: %v", flag.Arg(0))
 		}
 
-		resp, logicalError, err := client.Request(&ccp.PasswordRequest{
+		resp, logicalError, err := client.Request(ctx, &ccp.PasswordRequest{
 			Safe:   request[1],
 			Folder: request[2],
 			Object: request[3],
@@ -89,7 +91,7 @@ func main() {
 			}
 		}
 
-		resp, logicalError, err := client.Query(req, qf)
+		resp, logicalError, err := client.Query(ctx, req, qf)
 		if err != nil {
 			log.Fatalf("password query failed %v", err)
 		}

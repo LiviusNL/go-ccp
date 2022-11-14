@@ -1,6 +1,7 @@
 package ccp
 
 import (
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"net/url"
@@ -11,6 +12,7 @@ import (
 
 // TestAuthenticationRequest test authentcation with different client side certificates
 func TestAuthenticationRequest(t *testing.T) {
+	ctx := context.Background()
 	var tests = []struct {
 		applicationID string
 		clientCertID  string
@@ -41,7 +43,7 @@ func TestAuthenticationRequest(t *testing.T) {
 		}
 
 		var v url.Values
-		_, logicalError, err := tc.ccpRequest(&v)
+		_, logicalError, err := tc.ccpRequest(ctx, &v)
 		defer tc.Close()
 		if (err == nil) != test.valid2 {
 			t.Errorf("fail %v: %v", test, err)
@@ -54,6 +56,7 @@ func TestAuthenticationRequest(t *testing.T) {
 
 // TestRequest test password requests
 func TestRequest(t *testing.T) {
+	ctx := context.Background()
 	applicationID := "MyApp"
 	var tests = []struct {
 		Safe   string
@@ -84,7 +87,7 @@ func TestRequest(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		_, logicalError, err := tc.Request(&PasswordRequest{
+		_, logicalError, err := tc.Request(ctx, &PasswordRequest{
 			Safe:   test.Safe,
 			Folder: test.Folder,
 			Object: test.Object,
@@ -99,6 +102,7 @@ func TestRequest(t *testing.T) {
 }
 
 func TestQuery(t *testing.T) {
+	ctx := context.Background()
 	applicationID := "MyApp"
 	var tests = []struct {
 		Safe     string
@@ -127,7 +131,7 @@ func TestQuery(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		_, logicalError, err := tc.Query(&PasswordRequest{
+		_, logicalError, err := tc.Query(ctx, &PasswordRequest{
 			Safe:   test.Safe,
 			Folder: test.UserName,
 		}, QueryFormatExact)
@@ -142,6 +146,7 @@ func TestQuery(t *testing.T) {
 
 // TestRequest test password requests
 func TestMapSnakeCase(t *testing.T) {
+	ctx := context.Background()
 	applicationID := "MyApp"
 	var tests = []struct {
 		Safe   string
@@ -170,7 +175,7 @@ func TestMapSnakeCase(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		r, logicalError, err := tc.Request(&PasswordRequest{
+		r, logicalError, err := tc.Request(ctx, &PasswordRequest{
 			Safe:   test.Safe,
 			Folder: test.Folder,
 			Object: test.Object,

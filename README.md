@@ -73,14 +73,14 @@ Host returns the CCP Web Service host
 #### func (*Client) Query
 
 ```go
-func (c *Client) Query(r *PasswordRequest, qf QueryFormat) (*PasswordResponse, string, error)
+func (c *Client) Query(ctx context.Context, r *PasswordRequest, qf QueryFormat) (*PasswordResponse, string, error)
 ```
 Query queries the CCP Web Service for a password
 
 #### func (*Client) Request
 
 ```go
-func (c *Client) Request(r *PasswordRequest) (*PasswordResponse, string, error)
+func (c *Client) Request(ctx context.Context, r *PasswordRequest) (*PasswordResponse, string, error)
 ```
 Request requests a password from the CCP Web Service
 

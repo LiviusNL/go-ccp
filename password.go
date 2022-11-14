@@ -1,6 +1,7 @@
 package ccp
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -94,7 +95,7 @@ func (pr *PasswordResponse) MapSnakeCase() (map[string]interface{}, error) {
 }
 
 // Request requests a password from the CCP Web Service
-func (c *Client) Request(r *PasswordRequest) (*PasswordResponse, string, error) {
+func (c *Client) Request(ctx context.Context, r *PasswordRequest) (*PasswordResponse, string, error) {
 	v := &url.Values{}
 
 	if len(r.Safe) != 0 {
@@ -125,11 +126,11 @@ func (c *Client) Request(r *PasswordRequest) (*PasswordResponse, string, error) 
 		v.Set(valueReason, r.Reason)
 	}
 
-	return c.ccpRequest(v)
+	return c.ccpRequest(ctx, v)
 }
 
 // Query queries the CCP Web Service for a password
-func (c *Client) Query(r *PasswordRequest, qf QueryFormat) (*PasswordResponse, string, error) {
+func (c *Client) Query(ctx context.Context, r *PasswordRequest, qf QueryFormat) (*PasswordResponse, string, error) {
 	qv := make(map[string]string, 8)
 
 	if len(r.Safe) != 0 {
@@ -177,11 +178,11 @@ func (c *Client) Query(r *PasswordRequest, qf QueryFormat) (*PasswordResponse, s
 		v.Set(valueReason, r.Reason)
 	}
 
-	return c.ccpRequest(v)
+	return c.ccpRequest(ctx, v)
 }
 
-func (c *Client) ccpRequest(v *url.Values) (*PasswordResponse, string, error) {
-	req, err := http.NewRequest(http.MethodGet, c.url.String()+"&"+v.Encode(), nil)
+func (c *Client) ccpRequest(ctx context.Context, v *url.Values) (*PasswordResponse, string, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.url.String()+"&"+v.Encode(), nil)
 	if err != nil {
 		return nil, "", err
 	}
