@@ -9,6 +9,8 @@ import (
 	"net/url"
 	"strconv"
 	"sync"
+
+	dedicatedhttp "github.com/liviusnl/dedicated-http"
 )
 
 // Config is used to configure the creation of the CCP client
@@ -87,7 +89,7 @@ func NewClient(c *Config) (*Client, error) {
 		return nil, errors.New("Host is empty")
 	}
 	if c.HTTPClient == nil {
-		c.HTTPClient = CredentialProviderHTTPClient()
+		c.HTTPClient = dedicatedhttp.NewClient()
 	}
 	if len(c.ApplicationID) == 0 {
 		return nil, errors.New("ApplicationID is empty")

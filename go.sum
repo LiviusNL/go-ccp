@@ -1,2 +1,4 @@
+github.com/liviusnl/dedicated-http v0.1.1 h1:D3Xv7Zf4sqWQN2Qveo2sYThOPrWQf6nUiZ85MHB1Nnc=
+github.com/liviusnl/dedicated-http v0.1.1/go.mod h1:jt2fYJxStYHZiPo8R/x5C2HD3QRw5G1K5vZn/ff+apc=
 github.com/mitchellh/mapstructure v1.5.0 h1:jeMsZIYE/09sWLaz43PL7Gy6RuMjD2eJVyuac5Z2hdY=
 github.com/mitchellh/mapstructure v1.5.0/go.mod h1:bFUtVrKA4DC2yAKiSyO/QUcy7e+RRV2QTWOzhPopBRo=
